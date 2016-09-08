@@ -1,0 +1,7 @@
+applications/
+*tmp
+composer.lock
+vendor
+.foundation
+Makefile
+.DS_Store
