@@ -4,7 +4,13 @@ $applicationsfolder = "applications/";
 
 //////////////////////////////////////////////////////////////
 $appstolist = preg_split("/,/", $_GET["apps"]);
+require_once("libraries/load.php");
 require_once("functions.php");
+require_once("groups.php");
+if (isset($_GET["plist"])) {
+	generateiOSPlist($_GET["plist"]);
+	exit();
+}
 $appsFolders = scanDirBlacklist($applicationsfolder, array(".", ".."));
 $count = 0;
 $name = "";
@@ -28,6 +34,9 @@ $name = "";
                    <p class="bordertop"></p>
                     </div>
                     <div style='clear:both;'><br/></div>
+                    <?php if (true) {
+                    		//TODO, hide on Android
+                     ?>
         <div class="row">
         <h2>iOS Apps</h2>
             <?php if (disableIfNotiDevice() == "disabled") {?>
@@ -35,7 +44,7 @@ $name = "";
 <?php }
 
 foreach (getiOSApps($appsFolders, $applicationsfolder) as $app) :
-if(in_array($app["name"], $appstolist) || in_array($magicword, $appstolist)) {
+if(in_array($app["bundle"], $appstolist) || in_array($magicword, $appstolist)) {
     $count = $count + 1;
     if($count == 3) {
         echo '</div><div class="row">';
@@ -47,14 +56,16 @@ if(in_array($app["name"], $appstolist) || in_array($magicword, $appstolist)) {
                     <div class="version">
                         <p class="borderbottom"></p>
                         <h2><?php echo $app["name"]." (".$app["version"].")"; ?></h2>
+                        <h5><?php echo $app["bundle"]; ?></h5>
                         <div style='clear:both;'></div>
-                        <a class="btn btn-info <?php echo disableIfNotiDevice();?>" role="button" href="itms-services://?action=download-manifest&amp;url=<?php echo urlencode("https://apps.uncinc.nl/".$app["ipa"]."?format=plist") ?>">Install Application</a>
+                        <a class="btn btn-info <?php echo disableIfNotiDevice();?>" role="button" href="itms-services://?action=download-manifest&amp;url=<?php echo urlencode("https://apps.uncinc.nl/?plist=".$app["filepath"]) ?>">Install Application</a>
                     </div>
         </div>
 <?php }
 endforeach;
 if ($count == 2) {
     echo "</div>";
+}
 }
 if (disableIfNotiDevice() == "disabled") {
 ?>
@@ -64,7 +75,7 @@ if (disableIfNotiDevice() == "disabled") {
 <?php
 $count = 0;
     foreach (getAndroidApps($appsFolders, $applicationsfolder) as $app) :
-        if(in_array($app["name"], $appstolist) || in_array($magicword, $appstolist)) {
+        if(in_array($app["bundle"], $appstolist) || in_array($magicword, $appstolist)) {
             $count = $count + 1;
             if($count == 3) {
                 echo '</div><div class="row">';
@@ -76,6 +87,7 @@ $count = 0;
                     <div class="version">
                         <p class="borderbottom"></p>
                         <h2><?php echo $app["name"]." (".$app["version"].")"; ?></h2>
+                        <h5><?php echo $app["bundle"]; ?></h5>
                         <div style='clear:both;'></div>
                         <a class="btn btn-info" role="button" href="<?php echo "https://apps.uncinc.nl/".$app["filepath"]; ?>">Download Application</a>
                     </div>

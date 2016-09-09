@@ -28,6 +28,43 @@ function getiOSApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     return $values;
 }
 
+function generateiOSPlist($filepath) {
+	   $CFProperties = getCFProperties($filepath);
+	   header('Content-type: text/xml');
+print '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>assets</key>
+			<array>
+				<dict>
+					<key>kind</key>
+					<string>software-package</string>
+					<key>url</key>
+					<string>http://'.$_SERVER['HTTP_HOST'].'/'.$filepath.'</string>
+				</dict>
+			</array>
+			<key>metadata</key>
+			<dict>
+				<key>bundle-identifier</key>
+				<string>'.$CFProperties[1].'</string>
+				<key>bundle-version</key>
+				<string>'.$CFProperties[2].'</string>
+				<key>kind</key>
+				<string>software</string>
+				<key>title</key>
+				<string>'.$CFProperties[0].'</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>
+';
+}
+
 function getAndroidApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     $values = array();
     foreach ($appFolders as $appFolder) {
@@ -63,10 +100,7 @@ function disableIfNotAndroidDevice() {
 }
 
 function getCFProperties($ipa) {
-    require_once(__DIR__.'/libraries/CFPropertyList/CFPropertyList.php');
-
     $plist = new CFPropertyList\CFPropertyList();
-
     $zipHandler = zip_open($ipa);
     if ($zipHandler) {
         while ($zip_entry = zip_read($zipHandler)) {
@@ -85,11 +119,6 @@ function getCFProperties($ipa) {
 }
 
 function getApkManifestProperties($apk) {
-spl_autoload_register(function ($className) {
-    // Fix for OSX and *nix
-    $className = str_replace('\\', DIRECTORY_SEPARATOR, $className);
-    require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $className . ".php");
-});
 	$apk = new \ApkParser\Parser($apk);
 	$manifest = $apk->getManifest();
 	return array($manifest->getPackageName(), $manifest->getVersionName());
