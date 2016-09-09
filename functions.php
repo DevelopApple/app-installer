@@ -1,4 +1,7 @@
 <?php
+/*
+ * This function does a scanDir with a blacklist
+ */
 function scanDirBlacklist($dir, $blacklist = array(".", "..")) {
     $values = array();
 
@@ -9,7 +12,9 @@ function scanDirBlacklist($dir, $blacklist = array(".", "..")) {
     }
     return $values;
 }
-
+/*
+ * This function searches the application folder's subfolders for ipa files and parses those.
+ */
 function getiOSApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     $values = array();
     foreach ($appFolders as $appFolder) {
@@ -27,7 +32,9 @@ function getiOSApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     }
     return $values;
 }
-
+/*
+ * This function generates a plist for installation based on a ipa file path.
+ */
 function generateiOSPlist($filepath) {
 	   $CFProperties = getCFProperties($filepath);
 	   header('Content-type: text/xml');
@@ -64,7 +71,9 @@ print '<?xml version="1.0" encoding="UTF-8"?>
 </plist>
 ';
 }
-
+/*
+ * This function scans the application folder's subfolders for apk files and parses those.
+ */
 function getAndroidApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     $values = array();
     foreach ($appFolders as $appFolder) {
@@ -81,7 +90,9 @@ function getAndroidApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     }
     return $values;
 }
-
+/*
+ * Return disabled if not a iOS device
+ */
 function disableIfNotiDevice() {
     if (stripos($_SERVER['HTTP_USER_AGENT'],"iPod") || stripos($_SERVER['HTTP_USER_AGENT'],"iPhone") || stripos($_SERVER['HTTP_USER_AGENT'],"iPad")) {
         return "";
@@ -89,7 +100,9 @@ function disableIfNotiDevice() {
         return "disabled";
     }
 }
-
+/*
+ * Return disabled if not a Android device
+ */
 function disableIfNotAndroidDevice() {
 	$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
 	if(stripos($ua,'android') !== false) {
@@ -98,7 +111,9 @@ function disableIfNotAndroidDevice() {
 		return "disabled";
 	}
 }
-
+/*
+ * Opens the IPA file as a zip and parses the Info.plist when found.
+ */
 function getCFProperties($ipa) {
     $plist = new CFPropertyList\CFPropertyList();
     $zipHandler = zip_open($ipa);
@@ -117,7 +132,9 @@ function getCFProperties($ipa) {
         return array($e["CFBundleName"], $e["CFBundleIdentifier"], $e["CFBundleShortVersionString"]);
     }
 }
-
+/*
+ * Get manifest information based on apk path.
+ */
 function getApkManifestProperties($apk) {
 	$apk = new \ApkParser\Parser($apk);
 	$manifest = $apk->getManifest();
