@@ -1,5 +1,4 @@
 <?php
-namespace CFPropertyList;
 function scanDirBlacklist($dir, $blacklist = array(".", "..")) {
     $values = array();
 
@@ -14,16 +13,16 @@ function scanDirBlacklist($dir, $blacklist = array(".", "..")) {
 function getiOSApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     $values = array();
     foreach ($appFolders as $appFolder) {
-        foreach(scanDirBlacklist($basepath.$appFolder) as $versionFolder) {
-            $ipa = glob($basepath.$appFolder."/".$versionFolder."/*.ipa");
-            if (count($ipa) > 0) {
+    	$ipas = glob($basepath.$appFolder."/*.ipa");
+        foreach($ipas as $ipa) {
                 $tempArray = array();
-                $tempArray["name"] = $appFolder;
-                $tempArray["version"] = $versionFolder;
-                $tempArray["filepath"] = $ipa[0];
+                $CFProperties = getCFProperties($ipa);
+                $tempArray["name"] = $CFProperties[0];
+                $tempArray["bundle"] = $CFProperties[1];
+                $tempArray["version"] = $CFProperties[2];
+                $tempArray["filepath"] = $ipa;
+                $tempArray["file"] = basename($ipa);
                 array_push($values, $tempArray);
-            }
-
         }
     }
     return $values;
@@ -32,16 +31,15 @@ function getiOSApps($appFolders, $basepath, $blacklist = array(".", "..")) {
 function getAndroidApps($appFolders, $basepath, $blacklist = array(".", "..")) {
     $values = array();
     foreach ($appFolders as $appFolder) {
-        foreach(scanDirBlacklist($basepath.$appFolder) as $versionFolder) {
-            $apk = glob($basepath.$appFolder."/".$versionFolder."/*.apk");
-            if (count($apk) > 0) {
+    	$apks = glob($basepath.$appFolder."/*.apk");
+        foreach($apks as $apk) {
                 $tempArray = array();
+                $APKProperties = getApkManifestProperties($apk);
                 $tempArray["name"] = $appFolder;
-                $tempArray["version"] = $versionFolder;
-                $tempArray["filepath"] = $apk[0];
+                $tempArray["bundle"] = $APKProperties[0];
+                $tempArray["version"] = $APKProperties[1];
+                $tempArray["filepath"] = $apk;
                 array_push($values, $tempArray);
-            }
-
         }
     }
     return $values;
@@ -55,10 +53,19 @@ function disableIfNotiDevice() {
     }
 }
 
+function disableIfNotAndroidDevice() {
+	$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+	if(stripos($ua,'android') !== false) {
+		return "";
+	} else {
+		return "disabled";
+	}
+}
+
 function getCFProperties($ipa) {
     require_once(__DIR__.'/libraries/CFPropertyList/CFPropertyList.php');
 
-    $plist = new CFPropertyList();
+    $plist = new CFPropertyList\CFPropertyList();
 
     $zipHandler = zip_open($ipa);
     if ($zipHandler) {
@@ -71,10 +78,20 @@ function getCFProperties($ipa) {
             }
         }
 
-
         $plist->parse($buf);
         $e = $plist->toArray();
-        return array($e["CFBundleIdentifier"], $e["CFBundleVersion"]);
+        return array($e["CFBundleName"], $e["CFBundleIdentifier"], $e["CFBundleShortVersionString"]);
     }
+}
+
+function getApkManifestProperties($apk) {
+spl_autoload_register(function ($className) {
+    // Fix for OSX and *nix
+    $className = str_replace('\\', DIRECTORY_SEPARATOR, $className);
+    require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'libraries' . DIRECTORY_SEPARATOR . $className . ".php");
+});
+	$apk = new \ApkParser\Parser($apk);
+	$manifest = $apk->getManifest();
+	return array($manifest->getPackageName(), $manifest->getVersionName());
 }
 ?>

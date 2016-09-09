@@ -35,7 +35,6 @@ $name = "";
 <?php }
 
 foreach (getiOSApps($appsFolders, $applicationsfolder) as $app) :
-    replaceManifestURL($app);
 if(in_array($app["name"], $appstolist) || in_array($magicword, $appstolist)) {
     $count = $count + 1;
     if($count == 3) {
